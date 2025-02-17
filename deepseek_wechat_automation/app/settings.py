@@ -9,9 +9,9 @@ proxy_url = os.environ.get("PROXY_URL", None)
 web_port = int(os.environ.get("WEB_PORT", 8000))
 
 # OpenAI API
-llm_url = os.environ.get("LLM_API_URL", "127.0.0.1")
+llm_url = os.environ.get("LLM_API_URL", "https://ark.cn-beijing.volces.com/api/v3/bots/")
 llm_key = os.environ.get("LLM_API_KEY", "")
-llm_model = os.environ.get("LLM_MODEL", "gpt-3.5-turbo")
+llm_model = os.environ.get("LLM_MODEL", "bot-20250215153018-mj9m7")
 
 # Siliconflow API
 t2i_url = os.environ.get("T2I_API_URL", "https://api.siliconflow.cn/v1/")

@@ -25,7 +25,7 @@ text_prompt = """
 
 async def _new_text(retry: int = 0) -> tuple[str, dict[str, str], int]:
     resp = await openai_client.chat.completions.create(
-        model="bot-20250215153018",
+        model=settings.llm_model,
         messages=[{"role": "system", "content": text_prompt}],
         stream=False,
     )
@@ -44,8 +44,8 @@ async def _new_image(prompt: str) -> str:
     async with async_httpx_ctx() as session:
         resp = await session.post(
             f"{settings.t2i_url}images/generations",
-            headers={"Authorization": f"Bearer {settings.t2i_key}"},
-            content={"model": settings.t2i_model, "prompt": prompt},
+            headers={"Authorization": f"Bearer {settings.t2i_key}", "Content-Type": "application/json"},
+            json={"model": settings.t2i_model, "prompt": prompt},
         )
         return resp.json()["images"][0]["url"]
 

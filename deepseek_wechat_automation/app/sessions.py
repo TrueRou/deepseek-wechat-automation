@@ -11,5 +11,5 @@ openai_client = AsyncOpenAI(api_key=settings.llm_key, base_url=settings.llm_url)
 
 @contextlib.asynccontextmanager
 async def async_httpx_ctx():
-    async with httpx.AsyncClient(proxy=settings.proxy_url, timeout=20) as session:
+    async with httpx.AsyncClient(proxy=settings.proxy_url or None, timeout=20) as session:
         yield session

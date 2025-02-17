@@ -11,6 +11,9 @@ class AIGCResult(SQLModel):
     text: str
     images: dict[str, str]
 
+    def __repr__(self):
+        return f"AIGCResult(text={self.text}, images={self.images})"
+
 
 class UploaderCredential(SQLModel, table=True):
     __tablename__ = "uploader_credentials"
