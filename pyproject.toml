@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "deepseek-wechat-automation"
+version = "0.1.0"
+description = ""
+authors = ["Usagi no Niku <chenbohan911@163.com>"]
+readme = "README.md"
+packages = [
+    { include = "deepseek_wechat_automation" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+selenium = "^4.28.1"
+python-dotenv = "^1.0.1"
+fastapi = "^0.115.8"
+sqlalchemy = "^2.0.38"
+sqlmodel = "^0.0.22"
+apscheduler = "^3.11.0"
+alembic = "^1.14.1"
+httpx = "^0.28.1"
+openai = "^1.63.0"
+uvicorn = "^0.34.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
