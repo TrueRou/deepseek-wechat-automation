@@ -37,6 +37,11 @@ def add_model(session: Session, *models):
     [session.refresh(model) for model in models if model]
 
 
+def merge_model(session: Session, *models):
+    [session.merge(model) for model in models if model]
+    session.commit()
+
+
 def delete_model(session: Session, model: SQLModel):
     session.delete(model)
     session.commit()

@@ -4,6 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from deepseek_wechat_automation.app.models import SQLModel as SQLModelScope
 from deepseek_wechat_automation.app.settings import db_url
 
 # this is the Alembic Config object, which provides
@@ -19,7 +20,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = SQLModelScope.metadata
 config.set_main_option("sqlalchemy.url", db_url)
 
 # other values from the config, defined by the needs of env.py,
