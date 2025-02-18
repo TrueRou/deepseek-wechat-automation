@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from selenium import webdriver
 
-from deepseek_wechat_automation.app.models import UploaderCredential
+from deepseek_wechat_automation.app.models import AIGCResult, UploaderCredential
 
 
 class IUploader(ABC):
@@ -26,7 +26,7 @@ class IUploader(ABC):
         pass
 
     @abstractmethod
-    def enter_context(self, credential: UploaderCredential) -> None:
+    def enter_context(self, credential: UploaderCredential) -> bool:
         pass
 
     @abstractmethod
@@ -46,5 +46,9 @@ class IUploader(ABC):
         pass
 
     @abstractmethod
-    def insert_image(self, image_url: str) -> None:
+    async def insert_image(self, image_url: str) -> None:
+        pass
+
+    @abstractmethod
+    async def insert_result(self, result: AIGCResult) -> None:
         pass

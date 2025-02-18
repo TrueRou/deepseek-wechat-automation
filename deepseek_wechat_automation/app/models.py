@@ -22,6 +22,7 @@ class UploaderCredential(SQLModel, table=True):
     username: str = Field(primary_key=True)
     password: str
     credential: str
+    override_prompt: str | None = Field(default=None)
     is_expired: bool = Field(default=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_at: datetime = Field(default_factory=datetime.utcnow)

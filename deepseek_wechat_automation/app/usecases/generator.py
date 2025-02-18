@@ -24,7 +24,7 @@ text_prompt = """
 """
 
 
-async def _new_text(retry: int = 0) -> tuple[str, dict[str, str], int]:
+async def _new_text(retry: int = 0, override: str | None = None) -> tuple[str, dict[str, str], int]:
     if retry > 3:
         log(f"Failed to generate text after 3 retries. Aborting...", Ansi.LRED)
         raise Exception("Failed to generate text after 3 retries.")
@@ -32,7 +32,7 @@ async def _new_text(retry: int = 0) -> tuple[str, dict[str, str], int]:
     try:
         resp = await openai_client.chat.completions.create(
             model=settings.llm_model,
-            messages=[{"role": "system", "content": text_prompt}],
+            messages=[{"role": "system", "content": override or text_prompt}],
             stream=False,
         )
         content = resp.choices[0].message.content
@@ -69,12 +69,12 @@ async def _new_image(prompt: str, retry: int = 0) -> str:
             return await _new_image(prompt, retry + 1)
 
 
-async def generate_one() -> AIGCResult:
+async def generate_one(override: str | None = None) -> AIGCResult:
     with session_ctx() as session:
-        log("Generating new article...", Ansi.LGREEN)
-        text_content, image_requirements, retry = await _new_text()
+        log("Generating new article...")
+        text_content, image_requirements, retry = await _new_text(override=override)
         aigc_content = AIGCContent(text_content=text_content, image_content=json.dumps(image_requirements, ensure_ascii=False), retry=retry)
         database.add_model(session, aigc_content)
-        log("Generating images...", Ansi.LGREEN)
+        log("Generating images...")
         images = {img_id: await _new_image(prompt) for img_id, prompt in image_requirements.items()}
         return AIGCResult(text=text_content, images=images)

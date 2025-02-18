@@ -7,6 +7,8 @@ load_dotenv()
 db_url = os.environ.get("DATABASE_URL", "sqlite:///./db.sqlite3")
 proxy_url = os.environ.get("PROXY_URL", None)
 web_port = int(os.environ.get("WEB_PORT", 8000))
+web_host = os.environ.get("WEB_HOST", "127.0.0.1")
+article_author = os.environ.get("ARTICLE_AUTHOR", "小编")
 
 # OpenAI API
 llm_url = os.environ.get("LLM_API_URL", "https://ark.cn-beijing.volces.com/api/v3/bots/")

@@ -78,5 +78,5 @@ async def renew_account(credential: UploaderCredential = Depends(require_credent
 
 @asgi_app.post("/accounts/posts/new")
 async def trigger_post(credential: UploaderCredential = Depends(require_credential)):
-    asyncio.get_event_loop().run_in_executor(executor, scheduler.new_post, credential)
+    asyncio.get_event_loop().run_in_executor(executor, scheduler.create_new_article, credential)
     return RedirectResponse(url="/", status_code=303)
