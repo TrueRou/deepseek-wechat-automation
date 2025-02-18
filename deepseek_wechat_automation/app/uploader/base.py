@@ -8,7 +8,13 @@ class IUploader(ABC):
     driver: webdriver.Chrome
 
     def create_driver(self) -> None:
-        self.driver = webdriver.Chrome()
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        options.add_argument("disable-infobars")
+        options.add_argument("--incognito")
+        options.add_argument("log-level=3")
+        self.driver = webdriver.Chrome(options=options)
         self.driver.implicitly_wait(5)
 
     def drop_driver(self) -> None:

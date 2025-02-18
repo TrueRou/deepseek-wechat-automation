@@ -3,6 +3,7 @@ import json
 
 from deepseek_wechat_automation.app import database
 from deepseek_wechat_automation.app.database import session_ctx
+from deepseek_wechat_automation.app.logging import Ansi, log
 from deepseek_wechat_automation.app.models import AIGCContent, AIGCResult
 from deepseek_wechat_automation.app.sessions import async_httpx_ctx, openai_client
 from deepseek_wechat_automation.app import settings
@@ -24,36 +25,56 @@ text_prompt = """
 
 
 async def _new_text(retry: int = 0) -> tuple[str, dict[str, str], int]:
-    resp = await openai_client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[{"role": "system", "content": text_prompt}],
-        stream=False,
-    )
-    content = resp.choices[0].message.content
+    if retry > 3:
+        log(f"Failed to generate text after 3 retries. Aborting...", Ansi.LRED)
+        raise Exception("Failed to generate text after 3 retries.")
+
+    try:
+        resp = await openai_client.chat.completions.create(
+            model=settings.llm_model,
+            messages=[{"role": "system", "content": text_prompt}],
+            stream=False,
+        )
+        content = resp.choices[0].message.content
+    except Exception as e:
+        log(f"Failed to get LLM server response: {e}. Retrying...", Ansi.LYELLOW)
+        return await _new_text(retry + 1)
 
     article_match: re.Match[str] = re.search(r"<wechat_article>(.*?)</wechat_article>", content, re.DOTALL)
     images_match: re.Match[str] = re.search(r"<image_requirements>(.*?)</image_requirements>", content, re.DOTALL)
     if not article_match or not images_match:
+        log(f"Generated text does not match the template. Retrying... ({retry + 1})", Ansi.LYELLOW)
         return await _new_text(retry + 1)
 
     image_requirements = {f"img{img[0]}": img[1] for img in re.findall(r"<img(\d+)>: (.*?)\n", images_match.group(1))}
     return article_match.group(1), image_requirements, retry
 
 
-async def _new_image(prompt: str) -> str:
+async def _new_image(prompt: str, retry: int = 0) -> str:
+    if retry > 3:
+        log(f"Failed to generate image after 3 retries. Aborting...", Ansi.LRED)
+        raise Exception("Failed to generate image after 3 retries.")
+
     async with async_httpx_ctx() as session:
-        resp = await session.post(
-            f"{settings.t2i_url}images/generations",
-            headers={"Authorization": f"Bearer {settings.t2i_key}", "Content-Type": "application/json"},
-            json={"model": settings.t2i_model, "prompt": prompt},
-        )
-        return resp.json()["images"][0]["url"]
+        try:
+            resp = await session.post(
+                f"{settings.t2i_url}images/generations",
+                headers={"Authorization": f"Bearer {settings.t2i_key}", "Content-Type": "application/json"},
+                json={"model": settings.t2i_model, "prompt": prompt},
+            )
+
+            return resp.json()["images"][0]["url"]
+        except Exception as e:
+            log(f"Failed to get T2I server response: {e}. Retrying...", Ansi.LYELLOW)
+            return await _new_image(prompt, retry + 1)
 
 
 async def generate_one() -> AIGCResult:
     with session_ctx() as session:
+        log("Generating new article...", Ansi.LGREEN)
         text_content, image_requirements, retry = await _new_text()
         aigc_content = AIGCContent(text_content=text_content, image_content=json.dumps(image_requirements, ensure_ascii=False), retry=retry)
         database.add_model(session, aigc_content)
+        log("Generating images...", Ansi.LGREEN)
         images = {img_id: await _new_image(prompt) for img_id, prompt in image_requirements.items()}
         return AIGCResult(text=text_content, images=images)

@@ -1,8 +1,8 @@
 """initial commit
 
-Revision ID: 9d7f39385afe
+Revision ID: ff86dfacb1ca
 Revises: 
-Create Date: 2025-02-17 15:56:48.901364
+Create Date: 2025-02-18 14:25:07.094976
 
 """
 
@@ -14,7 +14,7 @@ import sqlmodel.sql.sqltypes
 
 
 # revision identifiers, used by Alembic.
-revision: str = "9d7f39385afe"
+revision: str = "ff86dfacb1ca"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,6 +37,8 @@ def upgrade() -> None:
         sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("credential", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("is_expired", sa.Boolean(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("uploader", "username"),
     )

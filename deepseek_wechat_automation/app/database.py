@@ -1,4 +1,5 @@
 import contextlib
+from fastapi import Request
 from sqlalchemy import text
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -23,6 +24,20 @@ def init_db():
         command.upgrade(AlembicConfig(config_args={"script_location": "alembic"}), "head")
     except Exception as e:
         log(f"Failed to run database migration: {e}", Ansi.RED)
+
+
+# https://stackoverflow.com/questions/75487025/how-to-avoid-creating-multiple-sessions-when-using-fastapi-dependencies-with-sec
+def register_middleware(asgi_app):
+    @asgi_app.middleware("http")
+    async def session_middleware(request: Request, call_next):
+        with Session(engine, expire_on_commit=False) as session:
+            request.state.session = session
+            response = await call_next(request)
+            return response
+
+
+def require_session(request: Request):
+    return request.state.session
 
 
 @contextlib.contextmanager

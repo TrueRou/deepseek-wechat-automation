@@ -1,11 +1,11 @@
 import contextlib
 import httpx
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from openai import AsyncOpenAI
 
 from deepseek_wechat_automation.app import settings
 
-scheduler = AsyncIOScheduler()
+scheduler = BackgroundScheduler()
 openai_client = AsyncOpenAI(api_key=settings.llm_key, base_url=settings.llm_url)
 
 

@@ -11,6 +11,7 @@ from deepseek_wechat_automation.app.uploader.base import IUploader
 
 class OffiAccountUploader(IUploader):
     def create_context(self, username: str, password: str) -> UploaderCredential:
+        self.create_driver()
         self.driver.get("https://mp.weixin.qq.com/cgi-bin/loginpage")
         # 点击使用账号密码登录
         self.driver.find_element(By.XPATH, "//a[@class='login__type__container__select-type']").click()
@@ -30,17 +31,23 @@ class OffiAccountUploader(IUploader):
                 credential=json.dumps(credential),
             )
             database.merge_model(session, model)
+        self.leave_context(model, save=False)
         return model
 
     def enter_context(self, credential: UploaderCredential) -> None:
+        self.create_driver()
         # 设置 cookies 和 token
+        self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN")
         credential = json.loads(credential.credential)
-        for cookie in credential.credential["cookies"]:
+        for cookie in credential["cookies"]:
             self.driver.add_cookie(cookie)
-        token = credential.credential["token"]
+        token = credential["token"]
         # 进入公众号主页并进入新的创作 - 文章
         self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token={token}")
         self.driver.find_element(By.XPATH, "//*[@id='app']/div[2]/div[3]/div[2]/div/div[2]").click()
+        # 切换至最新句柄
+        handles = self.driver.window_handles
+        self.driver.switch_to.window(handles[-1])
 
     def leave_context(self, credential: UploaderCredential, save: bool = True) -> None:
         if save:
@@ -50,7 +57,7 @@ class OffiAccountUploader(IUploader):
             WebDriverWait(self.driver, 30).until(EC.url_changes(self.driver.current_url))
         # 点击登出账号
         credential = json.loads(credential.credential)
-        token = credential.credential["token"]
+        token = credential["token"]
         self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token={token}")
         self.driver.find_element(By.XPATH, "//*[@id='js_mp_sidemenu']/div/div[3]/div[2]/div[2]/ul/li[4]/a").click()
 

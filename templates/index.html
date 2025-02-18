@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account View and Create Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        width: 90%;
+        max-width: 600px;
+        margin: 50px auto;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        margin-bottom: 5px;
+        color: #555;
+      }
+      input[type="text"],
+      input[type="password"] {
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        padding: 10px;
+        background: #5cb85c;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #4cae4c;
+      }
+      .account-list {
+        margin-top: 30px;
+      }
+      .account-item {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+      }
+      .account-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+      .account-actions .new-post {
+        background: #0275d8;
+      }
+      .account-actions .new-post:hover {
+        background: #025aa5;
+      }
+      .account-actions .renew {
+        background: #5cb85c;
+      }
+      .account-actions .renew:hover {
+        background: #4cae4c;
+      }
+      .account-actions .delete {
+        margin-left: auto;
+        background: #d9534f;
+      }
+      .account-actions .delete:hover {
+        background: #c9302c;
+      }
+      @media (min-width: 768px) {
+        .container {
+          width: 50%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Account Management</h1>
+      <form action="/accounts/new" method="post">
+        <label for="username">Email</label>
+        <input type="text" id="username" name="username" required />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+        <button type="submit">Add Account</button>
+      </form>
+
+      <div class="account-list">
+        <h2>Existing Accounts</h2>
+        {% for account in accounts %}
+        <div class="account-item">
+          <p><strong>Username:</strong> {{ account.username }}</p>
+          <p><strong>Created At:</strong> {{ account.created_at }}</p>
+          <div class="account-actions">
+            <form action="/accounts/renew" method="post">
+              <input
+                type="hidden"
+                name="uploader"
+                value="{{ account.uploader }}"
+              />
+              <input
+                type="hidden"
+                name="username"
+                value="{{ account.username }}"
+              />
+              <button type="submit" class="renew">Renew</button>
+            </form>
+            <form action="/accounts/posts/new" method="post">
+              <input
+                type="hidden"
+                name="uploader"
+                value="{{ account.uploader }}"
+              />
+              <input
+                type="hidden"
+                name="username"
+                value="{{ account.username }}"
+              />
+              <button type="submit" class="new-post">New Post</button>
+            </form>
+            <form action="/accounts/delete" method="post">
+              <input
+                type="hidden"
+                name="uploader"
+                value="{{ account.uploader }}"
+              />
+              <input
+                type="hidden"
+                name="username"
+                value="{{ account.username }}"
+              />
+              <button type="submit" class="delete">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>
