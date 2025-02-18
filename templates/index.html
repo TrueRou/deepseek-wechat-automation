@@ -107,6 +107,8 @@
         <div class="account-item">
           <p><strong>Username:</strong> {{ account.username }}</p>
           <p><strong>Created At:</strong> {{ account.created_at }}</p>
+          <p><strong>Updated At:</strong> {{ account.updated_at }}</p>
+          <p><strong>Is Expired:</strong> {{ account.is_expired }}</p>
           <div class="account-actions">
             <form action="/accounts/renew" method="post">
               <input

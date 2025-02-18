@@ -35,6 +35,7 @@ class OffiAccountUploader(IUploader):
                 username=username,
                 password=password,
                 credential=json.dumps(credential),
+                is_expired=False,
             )
             database.merge_model(session, model)
         self.leave_context(save=False)

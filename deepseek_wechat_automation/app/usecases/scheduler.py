@@ -14,6 +14,8 @@ from deepseek_wechat_automation.app.usecases.generator import generate_one
 
 async def init_sched():
     scheduler.add_job(func=create_new_article_sched, trigger=CronTrigger.from_crontab(scheduler_cron))
+    log(f"Scheduler initialized: {scheduler_cron}", Ansi.LBLUE)
+    scheduler.start()
 
 
 def create_new_article_sched():
