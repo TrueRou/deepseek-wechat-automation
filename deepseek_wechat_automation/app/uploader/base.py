@@ -11,6 +11,7 @@ class IUploader(ABC):
         options = webdriver.ChromeOptions()
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        options.add_experimental_option("useAutomationExtension", False)
         options.add_argument("disable-infobars")
         options.add_argument("--incognito")
         options.add_argument("log-level=3")
@@ -38,10 +39,6 @@ class IUploader(ABC):
 
     @abstractmethod
     def set_author(self, author: str) -> None:
-        pass
-
-    @abstractmethod
-    def set_head_image(self, image_url: str) -> None:
         pass
 
     @abstractmethod

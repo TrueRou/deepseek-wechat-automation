@@ -1,12 +1,17 @@
+import os
 import json
+import tempfile
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 from deepseek_wechat_automation.app import database
 from deepseek_wechat_automation.app.database import session_ctx
 from deepseek_wechat_automation.app.models import UploaderCredential, Uploaders
+from deepseek_wechat_automation.app.sessions import async_httpx_ctx
 from deepseek_wechat_automation.app.uploader.base import IUploader
+from deepseek_wechat_automation.app.usecases.clipboard import copy_image_to_clipboard
 
 
 class OffiAccountUploader(IUploader):
@@ -73,9 +78,6 @@ class OffiAccountUploader(IUploader):
         element.clear()
         element.send_keys(author)
 
-    def set_head_image(self, image_url: str) -> None:
-        pass
-
     def insert_text(self, text: str) -> None:
         # 进入iframe
         self.driver.switch_to.frame(self.driver.find_element(By.XPATH, '//*[@id="ueditor_0"]'))
@@ -84,5 +86,17 @@ class OffiAccountUploader(IUploader):
         # 退出iframe
         self.driver.switch_to.default_content()
 
-    def insert_image(self, image_url: str) -> None:
-        pass
+    async def insert_image(self, image_url: str) -> None:
+        async with async_httpx_ctx() as session:
+            response = await session.get(image_url)
+            image_filename = os.path.basename(image_url)
+            image_path = os.path.join(tempfile.gettempdir(), image_filename)
+            with open(image_path, "wb") as f:
+                f.write(response.content)
+            copy_image_to_clipboard(image_path)
+        # 进入iframe
+        self.driver.switch_to.frame(self.driver.find_element(By.XPATH, '//*[@id="ueditor_0"]'))
+        # 输入文章内容
+        self.driver.find_element(By.XPATH, "/html/body/p").send_keys(Keys.CONTROL, "v")
+        # 退出iframe
+        self.driver.switch_to.default_content()
