@@ -71,7 +71,7 @@ async def _new_image(prompt: str, retry: int = 0) -> str:
 
 async def generate_one(override: str | None = None) -> AIGCResult:
     with session_ctx() as session:
-        log("Generating new article...")
+        log("Generating article...")
         text_content, image_requirements, retry = await _new_text(override=override)
         aigc_content = AIGCContent(text_content=text_content, image_content=json.dumps(image_requirements, ensure_ascii=False), retry=retry)
         database.add_model(session, aigc_content)

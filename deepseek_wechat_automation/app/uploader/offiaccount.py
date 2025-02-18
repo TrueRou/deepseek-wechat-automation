@@ -37,7 +37,7 @@ class OffiAccountUploader(IUploader):
                 credential=json.dumps(credential),
             )
             database.merge_model(session, model)
-        self.leave_context(model, save=False)
+        self.leave_context(save=False)
         return model
 
     def enter_context(self, credential: UploaderCredential) -> bool:

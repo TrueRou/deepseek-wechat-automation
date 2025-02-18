@@ -17,7 +17,7 @@ async def main():
         uploader.enter_context(credential)
         await uploader.insert_result(result)
         input("Press any key to quit")
-        uploader.leave_context(credential, save=False)
+        uploader.leave_context(save=False)
         log(f"Finish context with credential: {credential.username}", Ansi.LYELLOW)
 
 
