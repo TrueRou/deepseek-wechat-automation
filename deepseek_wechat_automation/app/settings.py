@@ -1,7 +1,13 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+from deepseek_wechat_automation.app.logging import Ansi, log
+
+if not load_dotenv():
+    log("Failed to load .env file, using default settings.", Ansi.LRED)
+    log("Please make sure you have a .env file in the root directory.", Ansi.LRED)
+    log("You can copy .env.example to .env and modify the settings.", Ansi.LRED)
+    log("Default settings may not work properly because of missing api keys.", Ansi.LYELLOW)
 
 # Basic
 db_url = os.environ.get("DATABASE_URL", "sqlite:///./db.sqlite3")

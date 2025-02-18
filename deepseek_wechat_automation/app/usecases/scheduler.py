@@ -35,8 +35,8 @@ def create_new_article(credential: UploaderCredential):
     if uploader.enter_context(credential):
         asyncio.run(uploader.insert_result(result))
         log(f"Finish context with credential: {credential.username}", Ansi.LYELLOW)
-        uploader.leave_context(credential, save=True)
+        uploader.leave_context(save=True)
     else:
         log(f"Failed to enter context with credential, expired it: {credential.username}", Ansi.LYELLOW)
         credential.is_expired = True
-        uploader.leave_context(credential, save=False)
+        uploader.leave_context(save=False)
