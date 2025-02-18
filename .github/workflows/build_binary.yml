@@ -40,6 +40,7 @@ jobs:
             alembic=alembic
             templates=templates
           mode: app
+          lto: no
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
