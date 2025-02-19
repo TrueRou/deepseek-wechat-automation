@@ -35,7 +35,7 @@ def create_new_article(credential: UploaderCredential):
     log(f"Enter context with credential: {credential.username}", Ansi.LGREEN)
     uploader = OffiAccountUploader()
     if uploader.enter_context(credential):
-        asyncio.run(uploader.insert_result(result))
+        asyncio.run(uploader.insert_result(result, credential.override_author))
         log(f"Finish context with credential: {credential.username}", Ansi.LYELLOW)
         uploader.leave_context(save=True)
     else:

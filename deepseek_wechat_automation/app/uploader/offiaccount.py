@@ -107,14 +107,14 @@ class OffiAccountUploader(IUploader):
         # 退出iframe
         self.driver.switch_to.default_content()
 
-    async def insert_result(self, result: AIGCResult) -> None:
+    async def insert_result(self, result: AIGCResult, author: str | None = None) -> None:
         # 将文本分割为标题和正文
         lines = [line.strip() for line in result.text.split("\n") if line.strip()]
         title = lines[0]
         body = "\n".join(lines[1:])
 
         self.set_title(title)
-        self.set_author(settings.article_author)
+        self.set_author(author or settings.article_author)
 
         cur_index = 1
         cur_pos = 0

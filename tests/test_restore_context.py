@@ -17,7 +17,7 @@ async def main():
         log(f"Enter context with credential: {credential.username}", Ansi.LGREEN)
         uploader = OffiAccountUploader()
         uploader.enter_context(credential)
-        await uploader.insert_result(result)
+        await uploader.insert_result(result, credential.override_author)
         input("Press any key to quit")
         uploader.leave_context(save=False)
         log(f"Finish context with credential: {credential.username}", Ansi.LYELLOW)
