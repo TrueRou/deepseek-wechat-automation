@@ -12,8 +12,6 @@
 - 执行 `poetry shell` 激活虚拟环境
 - 执行 `cd deepseek_wechat_automation && python main.py` 运行程序
 
-> 注意：也可以使用 Releases 中的可执行文件直接运行, 但是也要配置 `.env` 文件
-
 ### 配置文件
 
 - 在 项目根目录 目录下创建 `.env` 文件, 可以根据 `.env.example` 文件进行配置
