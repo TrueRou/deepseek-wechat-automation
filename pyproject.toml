@@ -26,6 +26,8 @@ pywin32 = "^308"
 pillow = "^11.1.0"
 emoji = "^2.14.1"
 
+[tool.poetry.scripts]
+app = "deepseek_wechat_automation.main:app"
 
 [build-system]
 requires = ["poetry-core"]

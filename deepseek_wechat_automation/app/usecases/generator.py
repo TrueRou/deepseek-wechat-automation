@@ -65,7 +65,7 @@ async def _new_image(prompt: str, retry: int = 0) -> str:
 
             return resp.json()["images"][0]["url"]
         except Exception as e:
-            log(f"Failed to get T2I server response: {e}. Retrying...", Ansi.LYELLOW)
+            log(f"Failed to get T2I server response: {repr(e)}. Retrying...", Ansi.LYELLOW)
             return await _new_image(prompt, retry + 1)
 
 

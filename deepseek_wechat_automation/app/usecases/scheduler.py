@@ -31,7 +31,11 @@ def create_new_article_sched():
 
 def create_new_article(credential: UploaderCredential):
     log(f"Begin generation with credential: {credential.username}", Ansi.LGREEN)
-    result = asyncio.run(generate_one(credential.override_prompt))
+    try:
+        result = asyncio.run(generate_one(credential.override_prompt))
+    except Exception as e:
+        log(f"Failed to generate article. Skipping...", Ansi.LRED)
+        return
     log(f"Enter context with credential: {credential.username}", Ansi.LGREEN)
     uploader = OffiAccountUploader()
     if uploader.enter_context(credential):

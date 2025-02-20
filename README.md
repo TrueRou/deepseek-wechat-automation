@@ -9,8 +9,9 @@
 - Python 3.12 以上版本, Chrome 浏览器
 - 执行 `pip install poetry` 全局安装 Poetry
 - 执行 `poetry install` 安装项目依赖
-- 执行 `poetry shell` 激活虚拟环境
-- 执行 `cd deepseek_wechat_automation && python main.py` 运行程序
+- 执行 `poetry run app` 运行项目
+
+> 更新项目: `git pull && poetry install && poetry run app`
 
 ### 配置文件
 
