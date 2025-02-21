@@ -1,11 +1,13 @@
 import os
 import json
 import tempfile
+import time
 import emoji
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 from deepseek_wechat_automation.app import database, settings
 from deepseek_wechat_automation.app.database import session_ctx
@@ -86,6 +88,25 @@ class OffiAccountUploader(IUploader):
         copy_text_to_clipboard(author)
         element.send_keys(Keys.CONTROL, "v")
 
+    def set_header(self, header: str | None = None) -> None:
+        if header is not None:
+            raise NotImplementedError("OffiAccountUploader does not support setting custom header")
+        # 拖动滚动条, 鼠标悬停在 "拖拽或者选择封面"
+        cover = self.driver.find_element(By.XPATH, '//*[@id="js_cover_area"]/div[1]/span')
+        self.driver.execute_script("arguments[0].scrollIntoView();", cover)
+        time.sleep(2)  # 等待悬停效果
+        chain = ActionChains(self.driver)
+        # 悬停在 "拖拽或者选择封面", 点击 "从正文选择"
+        chain.move_to_element(self.driver.find_element(By.XPATH, '//*[@id="js_cover_area"]/div[1]')).perform()
+        self.driver.find_element(By.XPATH, '//*[@id="js_cover_null"]/ul/li[1]/a').click()
+        # 选择第一张图片, 点击下一步
+        self.driver.find_element(By.XPATH, '//*[@id="vue_app"]/div[2]/div[1]/div/div[2]/div[1]/div/ul/li/div').click()
+        time.sleep(2)  # 等待图片加载完成
+        self.driver.find_element(By.XPATH, '//*[@id="vue_app"]/div[2]/div[1]/div/div[3]/div[1]/button').click()
+        time.sleep(2)  # 等待图片加载完成
+        self.driver.find_element(By.XPATH, '//*[@id="vue_app"]/div[2]/div[1]/div/div[3]/div[2]/button').click()
+        time.sleep(2)  # 等待图片加载完成
+
     def insert_text(self, text: str) -> None:
         # 进入iframe
         self.driver.switch_to.frame(self.driver.find_element(By.XPATH, '//*[@id="ueditor_0"]'))
@@ -141,3 +162,6 @@ class OffiAccountUploader(IUploader):
 
         # 插入最后一个 <img+编号> 标签之后的剩余内容
         self.insert_text(body[last_pos:])
+
+        # 设置封面
+        self.set_header()

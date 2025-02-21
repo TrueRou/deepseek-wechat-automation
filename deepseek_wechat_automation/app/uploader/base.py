@@ -42,6 +42,10 @@ class IUploader(ABC):
         pass
 
     @abstractmethod
+    def set_header(self, header: str | None) -> None:
+        pass
+
+    @abstractmethod
     def insert_text(self, text: str) -> None:
         pass
 
