@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from sqlmodel import select
+from sqlmodel import Session, select
 from apscheduler.triggers.cron import CronTrigger
 
 from deepseek_wechat_automation.app.database import session_ctx
@@ -23,13 +23,12 @@ def create_new_article_sched():
         stmt = select(UploaderCredential).order_by(UploaderCredential.updated_at).where(UploaderCredential.is_expired == False)
         if credentials := session.exec(stmt).one_or_none():
             credentials.updated_at = datetime.utcnow()
-            create_new_article(credentials)
-            session.commit()
+            create_new_article(credentials, session)
         else:
             log("No account available now. Skipping...", Ansi.LYELLOW)
 
 
-def create_new_article(credential: UploaderCredential):
+def create_new_article(credential: UploaderCredential, session: Session, save: bool = True):
     log(f"Begin generation with credential: {credential.username}", Ansi.LGREEN)
     try:
         result = asyncio.run(generate_one(credential.override_prompt))
@@ -41,8 +40,9 @@ def create_new_article(credential: UploaderCredential):
     if uploader.enter_context(credential):
         asyncio.run(uploader.insert_result(result, credential.override_author))
         log(f"Finish context with credential: {credential.username}", Ansi.LYELLOW)
-        uploader.leave_context(save=True)
+        uploader.leave_context(save=save)
     else:
         log(f"Failed to enter context with credential, expired it: {credential.username}", Ansi.LYELLOW)
         credential.is_expired = True
         uploader.leave_context(save=False)
+    session.commit()

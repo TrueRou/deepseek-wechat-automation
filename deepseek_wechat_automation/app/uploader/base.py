@@ -26,7 +26,7 @@ class IUploader(ABC):
         pass
 
     @abstractmethod
-    def enter_context(self, credential: UploaderCredential) -> bool:
+    def enter_context(self, credential: UploaderCredential, view_only: bool = False) -> bool:
         pass
 
     @abstractmethod

@@ -41,7 +41,7 @@ class OffiAccountUploader(IUploader):
         self.leave_context(save=False)
         return model
 
-    def enter_context(self, credential: UploaderCredential) -> bool:
+    def enter_context(self, credential: UploaderCredential, view_only: bool = False) -> bool:
         self.create_driver()
         # 设置 cookies 和 token
         self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN")
@@ -52,10 +52,13 @@ class OffiAccountUploader(IUploader):
         # 进入公众号主页并进入新的创作 - 文章
         self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token={token}")
         try:
-            self.driver.find_element(By.XPATH, "//*[@id='app']/div[2]/div[3]/div[2]/div/div[2]").click()
-            # 切换至最新句柄
-            handles = self.driver.window_handles
-            self.driver.switch_to.window(handles[-1])
+            WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.XPATH, "//*[@id='app']/div[2]/div[3]/div[2]/div/div[2]")))
+            button = self.driver.find_element(By.XPATH, "//*[@id='app']/div[2]/div[3]/div[2]/div/div[2]")
+            if not view_only:
+                button.click()
+                # 切换至最新句柄
+                handles = self.driver.window_handles
+                self.driver.switch_to.window(handles[-1])
             return True
         except:
             return False

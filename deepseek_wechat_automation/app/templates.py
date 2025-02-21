@@ -70,13 +70,32 @@ async def renew_account(credential: UploaderCredential = Depends(require_credent
         try:
             OffiAccountUploader().create_context(credential.username, credential.password)
         except Exception as e:
-            log(f"Failed to renew account: {e[:64]}", Ansi.LRED)
+            log(f"Failed to renew account: {repr(e)[:64]}", Ansi.LRED)
 
     asyncio.get_event_loop().run_in_executor(executor, renew_account)
     return RedirectResponse(url="/", status_code=303)
 
 
-@asgi_app.post("/accounts/posts/new")
+@asgi_app.post("/accounts/view")
+async def view_account(credential: UploaderCredential = Depends(require_credential)):
+    def view_account():
+        with session_ctx() as session:
+            cred_ctx = session.get(UploaderCredential, (credential.uploader, credential.username))
+            if not OffiAccountUploader().enter_context(cred_ctx, view_only=True):
+                cred_ctx.is_expired = True
+                session.commit()
+                log(f"Failed to view account, expired it: {credential.username}", Ansi.LRED)
+
+    asyncio.get_event_loop().run_in_executor(executor, view_account)
+    return RedirectResponse(url="/", status_code=303)
+
+
+@asgi_app.post("/accounts/test")
 async def trigger_post(credential: UploaderCredential = Depends(require_credential)):
-    asyncio.get_event_loop().run_in_executor(executor, scheduler.create_new_article, credential)
+    def test_account():
+        with session_ctx() as session:
+            cred_ctx = session.get(UploaderCredential, (credential.uploader, credential.username))
+            scheduler.create_new_article(cred_ctx, session, save=False)
+
+    asyncio.get_event_loop().run_in_executor(executor, test_account)
     return RedirectResponse(url="/", status_code=303)

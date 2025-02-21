@@ -143,10 +143,15 @@
             <input type="hidden" name="username" value="{{account.username}}">
             <button type="submit" class="renew">更新状态</button>
           </form>
-          <form action="/accounts/posts/new" method="post">
+          <form action="/accounts/test" method="post">
             <input type="hidden" name="uploader" value="{{account.uploader}}">
             <input type="hidden" name="username" value="{{account.username}}">
-            <button type="submit" class="new-post">Trigger Test</button>
+            <button type="submit" class="new-post">测试文章</button>
+          </form>
+          <form action="/accounts/view" method="post">
+            <input type="hidden" name="uploader" value="{{account.uploader}}">
+            <input type="hidden" name="username" value="{{account.username}}">
+            <button type="submit" class="new-post">进入后台</button>
           </form>
           <form action="/accounts/delete" method="post">
             <input type="hidden" name="uploader" value="{{account.uploader}}">
