@@ -21,11 +21,26 @@ async def init_sched():
 def create_new_article_sched():
     with session_ctx() as session:
         stmt = select(UploaderCredential).order_by(UploaderCredential.updated_at).where(UploaderCredential.is_expired == False)
-        if credentials := session.exec(stmt).one_or_none():
-            credentials.updated_at = datetime.utcnow()
-            create_new_article(credentials, session)
-        else:
-            log("No account available now. Skipping...", Ansi.LYELLOW)
+        credentials = session.exec(stmt).all()  # 获取所有未过期的凭证
+        
+        if not credentials:
+            log("No accounts available now. Skipping...", Ansi.LYELLOW)
+            return
+            
+        log(f"Found {len(credentials)} accounts to process", Ansi.LBLUE)
+        current_time = datetime.utcnow()
+        
+        for credential in credentials:
+            try:
+                log(f"Processing account: {credential.username}", Ansi.LGREEN)
+                credential.updated_at = current_time  # 更新时间戳
+                create_new_article(credential, session)
+            except Exception as e:
+                log(f"Error processing account {credential.username}: {str(e)}", Ansi.LRED)
+                continue  # 继续处理下一个账号
+        
+        session.commit()  # 统一提交所有更改
+
 
 
 def create_new_article(credential: UploaderCredential, session: Session, save: bool = True):
