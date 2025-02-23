@@ -73,6 +73,16 @@ class OffiAccountUploader(IUploader):
             if save:
                 # 点击发表按钮
                 self.driver.find_element(By.XPATH, "//*[@id='js_send']/button").click()
+                # 等待发表按钮出现
+                btn_path = "//*[@id='vue_app']/div[2]/div[1]/div[1]/div/div[3]/div/div/div[1]/button"
+                btn_next_path = "//*[@id='vue_app']/div[2]/div[2]/div[1]/div/div[3]/div/div[1]/button"
+                WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.XPATH, btn_path)))
+                self.driver.find_element(By.XPATH, btn_path).click()
+                try:
+                    WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.XPATH, btn_next_path)))
+                    self.driver.find_element(By.XPATH, btn_next_path).click()
+                except:
+                    pass  # 本次不是群发，不用寻找下一步按钮
                 # 等待发表成功
                 WebDriverWait(self.driver, 30).until(EC.url_changes(self.driver.current_url))
             self.drop_driver()
