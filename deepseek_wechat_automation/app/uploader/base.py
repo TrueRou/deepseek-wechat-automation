@@ -20,6 +20,7 @@ class IUploader(ABC):
 
     def drop_driver(self) -> None:
         self.driver.quit()
+        self.driver = None
 
     @abstractmethod
     def create_context(self) -> UploaderCredential:

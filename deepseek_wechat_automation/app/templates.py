@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import asyncio
+from pytz import timezone
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from fastapi.responses import RedirectResponse
@@ -8,7 +10,7 @@ from fastapi import Depends, FastAPI, Form, Request
 from fastapi.templating import Jinja2Templates
 
 from deepseek_wechat_automation.app import database
-from deepseek_wechat_automation.app.logging import Ansi, log
+from deepseek_wechat_automation.app.logging import Ansi, log, set_timezone
 from deepseek_wechat_automation.app.models import UploaderCredential, Uploaders
 from deepseek_wechat_automation.app.uploader.offiaccount import OffiAccountUploader
 from deepseek_wechat_automation.app.usecases import scheduler
@@ -17,6 +19,7 @@ from deepseek_wechat_automation.app.database import require_session, session_ctx
 
 @asynccontextmanager
 async def init_lifespan(asgi_app: FastAPI):
+    set_timezone(tz=timezone("Asia/Shanghai"))
     database.init_db()
     await scheduler.init_sched()
     log("Startup process complete.", Ansi.LGREEN)

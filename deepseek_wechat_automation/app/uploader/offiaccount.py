@@ -11,6 +11,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 from deepseek_wechat_automation.app import database, settings
 from deepseek_wechat_automation.app.database import session_ctx
+from deepseek_wechat_automation.app.logging import Ansi, log
 from deepseek_wechat_automation.app.models import AIGCResult, UploaderCredential, Uploaders
 from deepseek_wechat_automation.app.sessions import async_httpx_ctx
 from deepseek_wechat_automation.app.uploader.base import IUploader
@@ -66,12 +67,13 @@ class OffiAccountUploader(IUploader):
             return False
 
     def leave_context(self, save: bool = True) -> None:
-        if save:
-            # 点击发表按钮
-            self.driver.find_element(By.XPATH, "//*[@id='js_send']/button").click()
-            # 等待发表成功
-            WebDriverWait(self.driver, 30).until(EC.url_changes(self.driver.current_url))
-        self.drop_driver()
+        if self.driver:
+            if save:
+                # 点击发表按钮
+                self.driver.find_element(By.XPATH, "//*[@id='js_send']/button").click()
+                # 等待发表成功
+                WebDriverWait(self.driver, 30).until(EC.url_changes(self.driver.current_url))
+            self.drop_driver()
 
     def set_title(self, title: str) -> None:
         # 输入文章标题
@@ -89,11 +91,23 @@ class OffiAccountUploader(IUploader):
         element.send_keys(Keys.CONTROL, "v")
 
     def set_header(self, header: str | None = None) -> None:
+        def _scroll(retry: int = 0) -> None:
+            if retry > 3:
+                log("Failed to scroll to cover area after 3 retries. Aborting...", Ansi.LRED)
+                self.leave_context(save=False)
+                raise Exception("Failed to scroll to cover area after 3 retries")
+            try:
+                cover = self.driver.find_element(By.XPATH, '//*[@id="js_cover_area"]/div[1]/span')
+                self.driver.execute_script("arguments[0].scrollIntoView();", cover)
+                WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="js_cover_area"]/div[1]')))
+            except:
+                log("Failed to scroll to cover area. Retrying...", Ansi.LYELLOW)
+                _scroll(retry + 1)
+
         if header is not None:
             raise NotImplementedError("OffiAccountUploader does not support setting custom header")
         # 拖动滚动条, 鼠标悬停在 "拖拽或者选择封面"
-        cover = self.driver.find_element(By.XPATH, '//*[@id="js_cover_area"]/div[1]/span')
-        self.driver.execute_script("arguments[0].scrollIntoView();", cover)
+        _scroll()  # 滚动到封面区域
         time.sleep(2)  # 等待悬停效果
         chain = ActionChains(self.driver)
         # 悬停在 "拖拽或者选择封面", 点击 "从正文选择"

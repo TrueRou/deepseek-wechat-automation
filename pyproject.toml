@@ -25,6 +25,7 @@ python-multipart = "^0.0.20"
 pywin32 = "^308"
 pillow = "^11.1.0"
 emoji = "^2.14.1"
+pytz = "^2025.1"
 
 [tool.poetry.scripts]
 app = "deepseek_wechat_automation.main:app"
