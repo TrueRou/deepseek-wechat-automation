@@ -48,22 +48,24 @@ class OffiAccountUploader(IUploader):
         self.create_driver()
         # 设置 cookies 和 token
         self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN")
-        credential = json.loads(credential.credential)
-        for cookie in credential["cookies"]:
+        credential_dict = json.loads(credential.credential)
+        for cookie in credential_dict["cookies"]:
             self.driver.add_cookie(cookie)
-        token = credential["token"]
+        token = credential_dict["token"]
         # 进入公众号主页并进入新的创作 - 文章
         self.driver.get(f"https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token={token}")
         try:
             WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.XPATH, "//*[@id='app']/div[2]/div[3]/div[2]/div/div[2]")))
             button = self.driver.find_element(By.XPATH, "//*[@id='app']/div[2]/div[3]/div[2]/div/div[2]")
+            username = self.driver.find_element(By.XPATH, "//*[@id='app']/div[2]/div[1]/div[1]/div/div[1]/div")
+            credential.override_username = username.text
             if not view_only:
                 button.click()
                 # 切换至最新句柄
                 handles = self.driver.window_handles
                 self.driver.switch_to.window(handles[-1])
             return True
-        except:
+        except Exception as e:
             return False
 
     def leave_context(self, save: bool = True) -> None:

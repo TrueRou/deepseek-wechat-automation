@@ -86,8 +86,8 @@ async def view_account(credential: UploaderCredential = Depends(require_credenti
             cred_ctx = session.get(UploaderCredential, (credential.uploader, credential.username))
             if not OffiAccountUploader().enter_context(cred_ctx, view_only=True):
                 cred_ctx.is_expired = True
-                session.commit()
                 log(f"Failed to view account, expired it: {credential.username}", Ansi.LRED)
+            session.commit()  # flush override username and expire
 
     asyncio.get_event_loop().run_in_executor(executor, view_account)
     return RedirectResponse(url="/", status_code=303)
