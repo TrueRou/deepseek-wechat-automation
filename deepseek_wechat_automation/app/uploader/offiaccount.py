@@ -73,6 +73,14 @@ class OffiAccountUploader(IUploader):
             if save:
                 # 点击发表按钮
                 self.driver.find_element(By.XPATH, "//*[@id='js_send']/button").click()
+
+                try:
+                    dialog_path = "//*[@id='wxDialog_1']/div[3]/a[1]"
+                    WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.XPATH, dialog_path)))
+                    self.driver.find_element(By.XPATH, dialog_path).click()
+                except:
+                    pass  # 本次不是第一次群发，不用关闭弹窗
+
                 # 等待发表按钮出现
                 btn_path = "//*[@id='vue_app']/div[2]/div[1]/div[1]/div/div[3]/div/div/div[1]/button"
                 btn_next_path = "//*[@id='vue_app']/div[2]/div[2]/div[1]/div/div[3]/div/div[1]/button"
