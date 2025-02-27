@@ -33,16 +33,21 @@ class OffiAccountUploader(IUploader):
         # 获取当前 token 和 cookies
         credential = {"token": self.driver.current_url.split("&token=")[1], "cookies": self.driver.get_cookies()}
         with session_ctx() as session:
-            model = UploaderCredential(
-                uploader=Uploaders.OFFIACCOUNT,
-                username=username,
-                password=password,
-                credential=json.dumps(credential),
-                is_expired=False,
-            )
-            database.merge_model(session, model)
+            account = session.get(UploaderCredential, (Uploaders.OFFIACCOUNT, username))
+            if not account:
+                account = UploaderCredential(
+                    uploader=Uploaders.OFFIACCOUNT,
+                    username=username,
+                    password=password,
+                    credential=json.dumps(credential),
+                )
+                database.add_model(session, account)
+            else:
+                account.credential = json.dumps(credential)
+                account.is_expired = False
+            session.commit()
         self.leave_context(save=False)
-        return model
+        return account
 
     def enter_context(self, credential: UploaderCredential, view_only: bool = False) -> bool:
         self.create_driver()
@@ -113,20 +118,18 @@ class OffiAccountUploader(IUploader):
     def set_header(self, header: str | None = None) -> None:
         if header is not None:
             raise NotImplementedError("OffiAccountUploader does not support setting custom header")
-        
+
         def scroll_to_bottom():
             try:
                 # 等待页面初始加载
-                WebDriverWait(self.driver, 10).until(
-                    lambda d: d.execute_script("return document.readyState") == "complete"
-                )
-                
+                WebDriverWait(self.driver, 10).until(lambda d: d.execute_script("return document.readyState") == "complete")
+
                 last_height = self.driver.execute_script("return document.body.scrollHeight")
                 while True:
                     # 渐进式滚动
                     self.driver.execute_script("window.scrollBy(0, 500);")
                     time.sleep(1.5)  # 等待内容加载
-                    
+
                     # 检查高度变化
                     new_height = self.driver.execute_script("return document.body.scrollHeight")
                     if new_height == last_height:
@@ -136,60 +139,54 @@ class OffiAccountUploader(IUploader):
                         if final_height == new_height:
                             break
                     last_height = new_height
-                
+
                 # 滚动到封面区域
-                cover = WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, '//*[@id="js_cover_area"]/div[1]/span'))
-                )
-                self.driver.execute_script("""
+                cover = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="js_cover_area"]/div[1]/span')))
+                self.driver.execute_script(
+                    """
                     arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});
                     window.scrollBy(0, -100);
-                """, cover)
-                
-                # 确保元素可交互
-                WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, '//*[@id="js_cover_area"]/div[1]'))
+                """,
+                    cover,
                 )
-                
+
+                # 确保元素可交互
+                WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="js_cover_area"]/div[1]')))
+
             except Exception as e:
                 log(f"滚动过程中出错: {str(e)}", Ansi.LRED)
                 raise
-        
+
         try:
             # 执行滚动
             scroll_to_bottom()
             time.sleep(2)
-            
+
             # 悬停在封面区域
-            cover_area = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="js_cover_area"]/div[1]'))
-            )
+            cover_area = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="js_cover_area"]/div[1]')))
             ActionChains(self.driver).move_to_element(cover_area).pause(1).perform()
-            
+
             # 点击"从正文选择"
             self.driver.find_element(By.XPATH, '//*[@id="js_cover_null"]/ul/li[1]/a').click()
-            
+
             # 选择第一张图片
             WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="vue_app"]/div[2]/div[1]/div/div[2]/div[1]/div/ul/li/div'))
             ).click()
             time.sleep(2)
-            
+
             # 点击下一步
             self.driver.find_element(By.XPATH, '//*[@id="vue_app"]/div[2]/div[1]/div/div[3]/div[1]/button').click()
             time.sleep(2)
-            
+
             # 最后确认
             self.driver.find_element(By.XPATH, '//*[@id="vue_app"]/div[2]/div[1]/div/div[3]/div[2]/button').click()
             time.sleep(2)
-            
+
         except Exception as e:
             log(f"执行封面选择操作失败: {str(e)}", Ansi.LRED)
             self.leave_context(save=False)
             raise
-
-
-
 
     def insert_text(self, text: str) -> None:
         # 进入iframe
