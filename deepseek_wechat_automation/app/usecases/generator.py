@@ -1,5 +1,7 @@
+import os
 import re
 import json
+import tempfile
 
 from deepseek_wechat_automation.app import database
 from deepseek_wechat_automation.app.database import session_ctx
@@ -57,13 +59,23 @@ async def _new_image(prompt: str, retry: int = 0) -> str:
 
     async with async_httpx_ctx() as session:
         try:
-            resp = await session.post(
-                f"{settings.t2i_url}images/generations",
-                headers={"Authorization": f"Bearer {settings.t2i_key}", "Content-Type": "application/json"},
-                json={"model": settings.t2i_model, "prompt": prompt},
-            )
+            if "siliconflow" in settings.t2i_url:
+                resp = await session.post(
+                    f"{settings.t2i_url}images/generations",
+                    headers={"Authorization": f"Bearer {settings.t2i_key}", "Content-Type": "application/json"},
+                    json={"model": settings.t2i_model, "prompt": prompt},
+                )
 
-            return resp.json()["images"][0]["url"]
+                return resp.json()["images"][0]["url"]
+            elif "pollinations" in settings.t2i_url:
+                image_url = f"{settings.t2i_url}prompt/{prompt}?width=1024&height=1024&seed=100&model=flux&nologo=true"
+                response = await session.get(image_url)
+                image_filename = f"{os.urandom(16).hex()}.png"
+                image_path = os.path.join(tempfile.gettempdir(), image_filename)
+                with open(image_path, "wb") as f:
+                    f.write(response.content)
+                return image_path
+
         except Exception as e:
             log(f"Failed to get T2I server response: {repr(e)}. Retrying...", Ansi.LYELLOW)
             return await _new_image(prompt, retry + 1)

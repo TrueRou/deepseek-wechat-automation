@@ -198,13 +198,16 @@ class OffiAccountUploader(IUploader):
         self.driver.switch_to.default_content()
 
     async def insert_image(self, image_url: str) -> None:
-        async with async_httpx_ctx() as session:
-            response = await session.get(image_url)
-            image_filename = os.path.basename(image_url.split("?")[0] if "?" in image_url else image_url)
-            image_path = os.path.join(tempfile.gettempdir(), image_filename)
-            with open(image_path, "wb") as f:
-                f.write(response.content)
-            copy_image_to_clipboard(image_path)
+        if image_url.startswith("http"):
+            async with async_httpx_ctx() as session:
+                response = await session.get(image_url)
+                image_filename = os.path.basename(image_url.split("?")[0] if "?" in image_url else image_url)
+                image_path = os.path.join(tempfile.gettempdir(), image_filename)
+                with open(image_path, "wb") as f:
+                    f.write(response.content)
+                copy_image_to_clipboard(image_path)
+        elif os.path.exists(image_url):
+            copy_image_to_clipboard(image_url)
         # 进入iframe
         self.driver.switch_to.frame(self.driver.find_element(By.XPATH, '//*[@id="ueditor_0"]'))
         # 输入文章内容
