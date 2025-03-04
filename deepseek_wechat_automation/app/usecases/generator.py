@@ -2,6 +2,7 @@ import os
 import re
 import json
 import tempfile
+import asyncio
 
 from deepseek_wechat_automation.app import database
 from deepseek_wechat_automation.app.database import session_ctx
@@ -52,7 +53,7 @@ async def _new_text(retry: int = 0, override: str | None = None) -> tuple[str, d
     return article_match.group(1), image_requirements, retry
 
 
-async def _new_image(prompt: str, retry: int = 0) -> str:
+async def _new_image(prompt: str, img_id: str, retry: int = 0) -> tuple[str, str]:
     if retry > 3:
         log(f"Failed to generate image after 3 retries. Aborting...", Ansi.LRED)
         raise Exception("Failed to generate image after 3 retries.")
@@ -66,7 +67,7 @@ async def _new_image(prompt: str, retry: int = 0) -> str:
                     json={"model": settings.t2i_model, "prompt": prompt},
                 )
 
-                return resp.json()["images"][0]["url"]
+                return img_id, resp.json()["images"][0]["url"]
             elif "pollinations" in settings.t2i_url:
                 image_url = f"{settings.t2i_url}prompt/{prompt}?width=1024&height=1024&seed=100&model=flux&nologo=true"
                 response = await session.get(image_url)
@@ -74,11 +75,11 @@ async def _new_image(prompt: str, retry: int = 0) -> str:
                 image_path = os.path.join(tempfile.gettempdir(), image_filename)
                 with open(image_path, "wb") as f:
                     f.write(response.content)
-                return image_path
+                return img_id, image_path
 
         except Exception as e:
             log(f"Failed to get T2I server response: {repr(e)}. Retrying...", Ansi.LYELLOW)
-            return await _new_image(prompt, retry + 1)
+            return await _new_image(prompt, img_id, retry + 1)
 
 
 async def generate_one(override: str | None = None) -> AIGCResult:
@@ -88,5 +89,7 @@ async def generate_one(override: str | None = None) -> AIGCResult:
         aigc_content = AIGCContent(text_content=text_content, image_content=json.dumps(image_requirements, ensure_ascii=False), retry=retry)
         database.add_model(session, aigc_content)
         log("Generating images...")
-        images = {img_id: await _new_image(prompt) for img_id, prompt in image_requirements.items()}
+        tasks = [_new_image(prompt, img_id) for img_id, prompt in image_requirements.items()]
+        results = await asyncio.gather(*tasks)
+        images = {img_id: url for img_id, url in results}
         return AIGCResult(text=text_content, images=images)
